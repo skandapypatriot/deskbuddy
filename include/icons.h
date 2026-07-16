@@ -91,4 +91,22 @@ const unsigned char icon_rainy_16[] PROGMEM = {
 
 
 
+// ── Weather icon lookup by condition code ─────────────────────────────────────
+
+inline const unsigned char* get_weather_icon_32(int code) {
+  if (code == 1000) return icon_sunny_32;
+  if (code == 1003) return icon_slightly_cloudy_32;
+  if (code == 1006 || code == 1009 || code == 1030 || code == 1135 || code == 1147) return icon_cloudy_32;
+  if (code == 1063 || code == 1150 || code == 1153 || code == 1180 || code == 1183 || code == 1186 || code == 1189) return icon_slight_rainy_32;
+  return icon_rainy_32;
+}
+
+inline const unsigned char* get_weather_icon_16(int code) {
+  if (code == 1000) return icon_sun_16;
+  if (code == 1003) return icon_slight_cloudy_16;
+  if (code == 1006 || code == 1009 || code == 1030 || code == 1135 || code == 1147) return icon_cloudy_16;
+  if (code == 1063 || code == 1150 || code == 1153 || code == 1180 || code == 1183 || code == 1186 || code == 1189) return icon_slight_rainy_16;
+  return icon_rainy_16;
+}
+
 #endif
