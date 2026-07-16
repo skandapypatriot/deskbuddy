@@ -2,6 +2,7 @@
 #include "globals.h"
 #include "icons.h"
 #include "helpers.h"
+#include "pomodoro.h"
 
 #if __has_include("splash_icon.h")
   #include "splash_icon.h"
@@ -142,6 +143,61 @@ inline void update_gui() {
       disp.drawStr(22, 55, todayBuf);
       disp.setFont(u8g2_font_4x6_tf);
       disp.drawStr(22, 62, weather_desc);
+
+    } else if (current_screen == 2) {
+      disp.setDrawColor(1);
+      disp.drawBox(0, 0, 128, 14);
+      disp.setDrawColor(0);
+      disp.setFont(u8g2_font_profont12_tr);
+      const char* pomo_title = "POMODORO";
+      int pt_w = disp.getStrWidth(pomo_title);
+      disp.drawStr((128 - pt_w) / 2, 11, pomo_title);
+      disp.setDrawColor(1);
+
+      if (pomo_done) {
+        disp.setFont(u8g2_font_logisoso16_tr);
+        const char* done_str = "DONE!";
+        int dw = disp.getStrWidth(done_str);
+        disp.drawStr((128 - dw) / 2, 40, done_str);
+        disp.setFont(u8g2_font_profont11_tf);
+        const char* hint = "Hold to reset";
+        int hw = disp.getStrWidth(hint);
+        disp.drawStr((128 - hw) / 2, 58, hint);
+
+      } else if (pomo_running) {
+        unsigned long elapsed = millis() - pomo_start_ms;
+        unsigned long remaining_ms = (elapsed >= pomo_duration_ms) ? 0 : (pomo_duration_ms - elapsed);
+        int rem_min = remaining_ms / 60000;
+        int rem_sec = (remaining_ms % 60000) / 1000;
+
+        char countdown_buf[8];
+        snprintf(countdown_buf, sizeof(countdown_buf), "%02d:%02d", rem_min, rem_sec);
+        disp.setFont(u8g2_font_logisoso24_tr);
+        int cw = disp.getStrWidth(countdown_buf);
+        disp.drawStr((128 - cw) / 2, 42, countdown_buf);
+
+        disp.setFont(u8g2_font_profont11_tf);
+        const char* run_hint = "Hold=Reset";
+        int rh_w = disp.getStrWidth(run_hint);
+        disp.drawStr((128 - rh_w) / 2, 53, run_hint);
+
+        int bar_fill = (int)((128.0f * elapsed) / pomo_duration_ms);
+        if (bar_fill > 128) bar_fill = 128;
+        disp.drawFrame(0, 58, 128, 4);
+        if (bar_fill > 0) disp.drawBox(0, 58, bar_fill, 4);
+
+      } else {
+        char dur_buf[16];
+        snprintf(dur_buf, sizeof(dur_buf), "%d MIN", POMO_PRESETS[pomo_preset_idx]);
+        disp.setFont(u8g2_font_logisoso24_tr);
+        int dw = disp.getStrWidth(dur_buf);
+        disp.drawStr((128 - dw) / 2, 46, dur_buf);
+
+        disp.setFont(u8g2_font_profont11_tf);
+        const char* idle_hint = "Tap+  Hold=Start";
+        int iw = disp.getStrWidth(idle_hint);
+        disp.drawStr((128 - iw) / 2, 62, idle_hint);
+      }
     }
   } while (disp.nextPage());
 }

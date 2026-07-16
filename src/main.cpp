@@ -3,12 +3,17 @@
 #include "config.h"
 #include "helpers.h"
 #include "icons.h"
+#include "pomodoro.h"
 #include "display.h"
 #include "network.h"
 
 void setup() {
   Serial.begin(115200);
   delay(100);
+
+  pinMode(BUZZER_PIN, OUTPUT);
+  BUZZER_OFF();
+  pinMode(BTN_PIN, INPUT_PULLUP);
 
   Wire.begin(I2C_SDA, I2C_SCL);
   disp.begin();
@@ -37,9 +42,13 @@ void loop() {
 
   unsigned long now_ms = millis();
 
-  if (now_ms - last_screen_switch >= 6000) {
-    current_screen = (current_screen == 0) ? 1 : 0;
-    last_screen_switch = now_ms;
+  handle_button_and_pomo();
+
+  if (!pomo_screen_active) {
+    if (now_ms - last_screen_switch >= 6000) {
+      current_screen = (current_screen + 1) % 3;
+      last_screen_switch = now_ms;
+    }
   }
 
   if (wifi_connected && (last_weather_fetch == 0 || now_ms - last_weather_fetch >= 600000)) {
@@ -47,5 +56,5 @@ void loop() {
   }
 
   update_gui();
-  delay(100);
+  delay(900);
 }
