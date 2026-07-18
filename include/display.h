@@ -1,8 +1,6 @@
 #pragma once
 #include "globals.h"
-#include "icons.h"
 #include "helpers.h"
-#include "pomodoro.h"
 
 #if __has_include("splash_icon.h")
   #include "splash_icon.h"
@@ -56,13 +54,11 @@ inline void show_boot_status(const char* status_msg, const char* sub_msg = "", i
   do {
     disp.drawFrame(2, 2, 124, 60);
 
-    disp.setDrawColor(1);
-    disp.drawBox(4, 4, 120, 13);
-    disp.setDrawColor(0);
     disp.setFont(u8g2_font_profont12_tr);
     int title_width = disp.getStrWidth("DESK BUDDY");
     disp.drawStr((128 - title_width) / 2, 14, "DESK BUDDY");
-    disp.setDrawColor(1);
+
+    disp.drawHLine(10, 18, 108);
 
     disp.setFont(u8g2_font_profont12_tr);
     int msg_width = disp.getStrWidth(status_msg);
@@ -83,121 +79,39 @@ inline void show_boot_status(const char* status_msg, const char* sub_msg = "", i
   } while (disp.nextPage());
 }
 
+// ── Clock screen (screen 0, always present) ────────────────────────────────
+
 inline void update_gui() {
   disp.firstPage();
   do {
     disp.setDrawColor(1);
 
-    if (current_screen == 0) {
-      disp.drawBox(0, 0, 128, 17);
-      disp.setDrawColor(0);
-      disp.setFont(u8g2_font_profont12_tr);
+    disp.setFont(u8g2_font_profont10_tr);
 
-      char date_text_buf[50] = "";
-      snprintf(date_text_buf, sizeof(date_text_buf), "%d%s %s, %s",
-               now.day(), get_ordinal(now.day()), get_month_str(), get_day_str());
-      int bufwidth = disp.getStrWidth(date_text_buf);
-      int bufX = (128 - bufwidth) / 2;
-      disp.drawStr(bufX, 12, date_text_buf);
+    char date_text_buf[50] = "";
+    snprintf(date_text_buf, sizeof(date_text_buf), "%d%s %s, %s",
+             timeinfo.tm_mday, get_ordinal(timeinfo.tm_mday), get_month_str(), get_day_str());
+    int bufwidth = disp.getStrWidth(date_text_buf);
+    int bufX = (128 - bufwidth) / 2;
+    disp.drawStr(bufX, 8, date_text_buf);
 
-      draw_wifi_icon(120, 5, WiFi.status() == WL_CONNECTED);
+    draw_wifi_icon(120, 1, WiFi.status() == WL_CONNECTED);
 
-      disp.setDrawColor(1);
+    disp.drawHLine(0, 12, 128);
 
-      char timebuf[20] = "";
-      snprintf(timebuf, sizeof(timebuf), "%02i:%02i", now.hour(), now.minute());
-      disp.setFont(u8g2_font_logisoso24_tr);
-      int timeWidth = disp.getStrWidth(timebuf);
-      int timeX = (128 - timeWidth) / 2;
-      disp.drawStr(timeX, 47, timebuf);
+    char timebuf[20] = "";
+    snprintf(timebuf, sizeof(timebuf), "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+    disp.setFont(u8g2_font_logisoso24_tr);
+    int timeWidth = disp.getStrWidth(timebuf);
+    int timeX = (128 - timeWidth) / 2;
+    disp.drawStr(timeX, 43, timebuf);
 
-      char datebuf[25] = "";
-      snprintf(datebuf, sizeof(datebuf), "%02i/%02i/%i", now.day(), now.month(), now.year());
-      disp.setFont(u8g2_font_profont12_tr);
-      int dateWidth = disp.getStrWidth(datebuf);
-      int dateX = (128 - dateWidth) / 2;
-      disp.drawStr(dateX, 62, datebuf);
+    char datebuf[25] = "";
+    snprintf(datebuf, sizeof(datebuf), "%02d/%02d/%d", timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
+    disp.setFont(u8g2_font_profont12_tr);
+    int dateWidth = disp.getStrWidth(datebuf);
+    int dateX = (128 - dateWidth) / 2;
+    disp.drawStr(dateX, 58, datebuf);
 
-    } else if (current_screen == 1) {
-      disp.setFont(u8g2_font_profont11_tf);
-      for (int i = 0; i < 3; i++) {
-        int x_pos = 2 + (i * 42);
-        disp.drawStr(x_pos + 7, 8, forecastDays[i]);
-        disp.drawXBMP(x_pos + 5, 10, 16, 16, get_weather_icon_16(forecastCodes[i]));
-        disp.setFont(u8g2_font_4x6_tf);
-        char hlBuf[12];
-        snprintf(hlBuf, sizeof(hlBuf), "%.0f/%.0f", forecastHighs[i], forecastLows[i]);
-        disp.drawStr(x_pos + 3, 33, hlBuf);
-        char rainBuf[8];
-        snprintf(rainBuf, sizeof(rainBuf), "%d%%", forecastRain[i]);
-        disp.drawStr(x_pos + 7, 40, rainBuf);
-        disp.setFont(u8g2_font_profont11_tf);
-      }
-
-      disp.drawHLine(0, 42, 128);
-
-      disp.drawXBMP(2, 46, 16, 16, get_weather_icon_16(weather_code));
-      disp.setFont(u8g2_font_profont11_tf);
-      char todayBuf[32];
-      snprintf(todayBuf, sizeof(todayBuf), "%.1fC %s", weather_temp, weather_loc);
-      disp.drawStr(22, 55, todayBuf);
-      disp.setFont(u8g2_font_4x6_tf);
-      disp.drawStr(22, 62, weather_desc);
-
-    } else if (current_screen == 2) {
-      disp.setDrawColor(1);
-      disp.drawBox(0, 0, 128, 14);
-      disp.setDrawColor(0);
-      disp.setFont(u8g2_font_profont12_tr);
-      const char* pomo_title = "POMODORO";
-      int pt_w = disp.getStrWidth(pomo_title);
-      disp.drawStr((128 - pt_w) / 2, 11, pomo_title);
-      disp.setDrawColor(1);
-
-      if (pomo_done) {
-        disp.setFont(u8g2_font_logisoso16_tr);
-        const char* done_str = "DONE!";
-        int dw = disp.getStrWidth(done_str);
-        disp.drawStr((128 - dw) / 2, 40, done_str);
-        disp.setFont(u8g2_font_profont11_tf);
-        const char* hint = "Hold to reset";
-        int hw = disp.getStrWidth(hint);
-        disp.drawStr((128 - hw) / 2, 58, hint);
-
-      } else if (pomo_running) {
-        unsigned long elapsed = millis() - pomo_start_ms;
-        unsigned long remaining_ms = (elapsed >= pomo_duration_ms) ? 0 : (pomo_duration_ms - elapsed);
-        int rem_min = remaining_ms / 60000;
-        int rem_sec = (remaining_ms % 60000) / 1000;
-
-        char countdown_buf[8];
-        snprintf(countdown_buf, sizeof(countdown_buf), "%02d:%02d", rem_min, rem_sec);
-        disp.setFont(u8g2_font_logisoso24_tr);
-        int cw = disp.getStrWidth(countdown_buf);
-        disp.drawStr((128 - cw) / 2, 42, countdown_buf);
-
-        disp.setFont(u8g2_font_profont11_tf);
-        const char* run_hint = "Hold=Reset";
-        int rh_w = disp.getStrWidth(run_hint);
-        disp.drawStr((128 - rh_w) / 2, 53, run_hint);
-
-        int bar_fill = (int)((128.0f * elapsed) / pomo_duration_ms);
-        if (bar_fill > 128) bar_fill = 128;
-        disp.drawFrame(0, 58, 128, 4);
-        if (bar_fill > 0) disp.drawBox(0, 58, bar_fill, 4);
-
-      } else {
-        char dur_buf[16];
-        snprintf(dur_buf, sizeof(dur_buf), "%d MIN", POMO_PRESETS[pomo_preset_idx]);
-        disp.setFont(u8g2_font_logisoso24_tr);
-        int dw = disp.getStrWidth(dur_buf);
-        disp.drawStr((128 - dw) / 2, 46, dur_buf);
-
-        disp.setFont(u8g2_font_profont11_tf);
-        const char* idle_hint = "Tap+  Hold=Start";
-        int iw = disp.getStrWidth(idle_hint);
-        disp.drawStr((128 - iw) / 2, 62, idle_hint);
-      }
-    }
   } while (disp.nextPage());
 }

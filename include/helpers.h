@@ -9,7 +9,7 @@ inline const char* get_ordinal(int day) {
 }
 
 inline const char* get_month_str() {
-  int m = now.month();
+  int m = timeinfo.tm_mon + 1;
   const char* months[] = {
     "", "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
     "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
@@ -19,7 +19,7 @@ inline const char* get_month_str() {
 }
 
 inline const char* get_day_str() {
-  int d = now.dayOfTheWeek();
+  int d = timeinfo.tm_wday;
   const char* days[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
   if (d >= 0 && d <= 6) return days[d];
   return "";

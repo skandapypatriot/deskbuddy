@@ -4,6 +4,7 @@
 #include <U8g2lib.h>
 #include <RTClib.h>
 #include <WiFi.h>
+#include <time.h>
 
 #define I2C_SDA       8
 #define I2C_SCL       9
@@ -14,11 +15,11 @@
 extern U8G2_SSD1306_128X64_NONAME_1_HW_I2C disp;
 extern RTC_DS3231 rtc;
 extern bool     rtc_began;
-extern DateTime now;
+extern struct tm timeinfo;
 extern bool     wifi_connected;
 extern int      current_screen;
-extern bool     pomo_screen_active;
 extern unsigned long last_screen_switch;
+extern unsigned long last_btn_activity_ms;
 
 extern float weather_temp;
 extern int   weather_humidity;
@@ -41,6 +42,4 @@ extern unsigned long pomo_start_ms;
 extern unsigned long pomo_duration_ms;
 extern bool          pomo_done;
 
-extern bool          btn_was_pressed;
-extern unsigned long btn_press_start;
-extern bool          btn_long_fired;
+extern bool          modem_sound_active;
